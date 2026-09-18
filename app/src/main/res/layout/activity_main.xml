@@ -21,7 +21,7 @@
             android:textColor="@color/alpha_text"
             android:textSize="23sp"
             android:textStyle="bold"
-            android:letterSpacing="0.12"/>
+            android:letterSpacing="0.12" />
 
         <TextView
             android:id="@+id/status"
@@ -31,13 +31,14 @@
             android:textColor="@color/alpha_red"
             android:textSize="11sp"
             android:textStyle="bold"
-            android:padding="8dp"/>
+            android:padding="8dp" />
+
     </LinearLayout>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/alpha_line"/>
+        android:background="@color/alpha_line" />
 
     <TextView
         android:id="@+id/welcome"
@@ -49,7 +50,7 @@
         android:text="وش تبي نسوي اليوم؟"
         android:textColor="@color/alpha_text"
         android:textSize="25sp"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/subtitle"
@@ -60,7 +61,7 @@
         android:paddingEnd="22dp"
         android:text="اكتب فكرتك، وخل ALPHA يبدأ."
         android:textColor="@color/alpha_muted"
-        android:textSize="14sp"/>
+        android:textSize="14sp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messages"
@@ -71,7 +72,7 @@
         android:paddingStart="16dp"
         android:paddingTop="12dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="10dp"/>
+        android:paddingBottom="10dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -90,7 +91,7 @@
             android:background="@android:color/transparent"
             android:src="@android:drawable/ic_input_add"
             android:contentDescription="إضافة"
-            android:tint="@color/alpha_muted"/>
+            android:tint="@color/alpha_muted" />
 
         <EditText
             android:id="@+id/input"
@@ -101,13 +102,13 @@
             android:layout_marginEnd="8dp"
             android:background="@drawable/bg_input"
             android:hint="اكتب لـ ALPHA..."
-            android:hintTextColor="@color/alpha_muted"
+            android:textColorHint="@color/alpha_muted"
             android:textColor="@color/alpha_text"
             android:textColorHighlight="@color/alpha_red"
             android:paddingStart="18dp"
             android:paddingEnd="18dp"
             android:singleLine="true"
-            android:imeOptions="actionSend"/>
+            android:imeOptions="actionSend" />
 
         <ImageButton
             android:id="@+id/sendButton"
@@ -116,7 +117,8 @@
             android:background="@drawable/bg_message_user"
             android:src="@android:drawable/ic_menu_send"
             android:contentDescription="إرسال"
-            android:tint="@color/alpha_text"/>
+            android:tint="@color/alpha_text" />
+
     </LinearLayout>
 
 </LinearLayout>
