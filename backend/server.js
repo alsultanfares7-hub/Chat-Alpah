@@ -3,7 +3,7 @@ import cors from "cors";
 import OpenAI from "openai";
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
@@ -44,18 +44,28 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    const response = await client.responses.create({
-      model: process.env.OPENAI_MODEL || "gpt-5.6-luna",
-      instructions:
-        "أنت ALPHA، مساعد عربي ودود ومفيد. أجب بوضوح وباختصار مناسب، ولا تدّعي تنفيذ شيء لم تنفذه.",
-      input: prompt
+    // استدعاء OpenAI بالصيغة الرسمية الصحيحة
+    const response = await client.chat.completions.create({
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "أنت ALPHA، مساعد عربي ودود ومفيد. أجب بوضوح وباختصار مناسب، ولا تدّعي تنفيذ شيء لم تنفذه."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]
     });
 
+    const replyText = response.choices[0]?.message?.content;
+
     res.json({
-      reply: response.output_text || "لم يصل رد من نموذج الذكاء الاصطناعي."
+      reply: replyText || "لم يصل رد من نموذج الذكاء الاصطناعي."
     });
   } catch (error) {
-    console.error(error);
+    console.error("OpenAI Error:", error);
     res.status(500).json({
       error: "حدث خطأ في الخادم."
     });
