@@ -48,9 +48,9 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    // استدعاء نموذج Groq السريع والمجاني
+    // تم تحديث اسم النموذج ليعمل مع Groq بدون أخطاء
     const response = await client.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",
