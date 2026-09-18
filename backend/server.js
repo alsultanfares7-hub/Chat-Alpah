@@ -8,7 +8,6 @@ const port = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
-// إعداد الاتصال باستخدام SDK الرسمي لـ Groq
 const groq = process.env.GROQ_API_KEY
   ? new Groq({ apiKey: process.env.GROQ_API_KEY })
   : null;
@@ -32,21 +31,21 @@ app.post("/api/chat", async (req, res) => {
     }
 
     if (!groq) {
-      return res.status(503).json({ error: "مفتاح GROQ_API_KEY غير مضبوط" });
+      return res.status(503).json({ error: "مفتاح GROQ_API_KEY غير موجود في Railway" });
     }
 
-    // التجربة المتتابعة للنماذج الأساسية المتاحة حالياً في Groq
-    const modelsToTry = [
-      process.env.GROQ_MODEL,
+    // قائمة النماذج المضمونة للعمل المباشر
+    const availableModels = [
       "llama-3.1-8b-instant",
       "llama-3.3-70b-versatile",
       "gemma2-9b-it"
-    ].filter(Boolean);
+    ];
 
     let completion = null;
     let usedModel = "";
+    let lastErr = null;
 
-    for (const model of modelsToTry) {
+    for (const model of availableModels) {
       try {
         completion = await groq.chat.completions.create({
           messages: [
@@ -56,22 +55,24 @@ app.post("/api/chat", async (req, res) => {
           model: model,
         });
         usedModel = model;
-        break; // نجاح الطلب
+        break;
       } catch (err) {
         console.warn(`فشل النموذج ${model}:`, err.message);
+        lastErr = err;
       }
     }
 
     if (!completion) {
-      return res.status(500).json({ error: "تعذر الاتصال بجميع نماذج Groq" });
+      console.error("Groq Final Error:", lastErr);
+      return res.status(500).json({ error: "فشل الاتصال بجميع النماذج: " + (lastErr?.message || "") });
     }
 
     const replyText = completion.choices[0]?.message?.content || "لا يوجد رد";
     res.json({ reply: replyText, model: usedModel });
 
   } catch (error) {
-    console.error("Groq Error:", error);
-    res.status(500).json({ error: "حدث خطأ في الخادم" });
+    console.error("Server Error:", error);
+    res.status(500).json({ error: "حدث خطأ غير متوقع في الخادم" });
   }
 });
 
