@@ -8,7 +8,6 @@ const port = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
-// إعداد الاتصال بـ Groq باستخدام مكتبة OpenAI
 const client = process.env.GROQ_API_KEY
   ? new OpenAI({
       apiKey: process.env.GROQ_API_KEY,
@@ -17,62 +16,43 @@ const client = process.env.GROQ_API_KEY
   : null;
 
 app.get("/", (req, res) => {
-  res.json({
-    name: "ALPHA Backend",
-    status: "online"
-  });
+  res.json({ name: "ALPHA Backend", status: "online" });
 });
 
 app.get("/health", (req, res) => {
-  res.json({
-    ok: true,
-    aiConfigured: Boolean(client)
-  });
+  res.json({ ok: true, aiConfigured: Boolean(client) });
 });
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const prompt = typeof req.body?.message === "string"
-      ? req.body.message.trim()
-      : "";
+    const prompt = typeof req.body?.message === "string" ? req.body.message.trim() : "";
 
     if (!prompt) {
-      return res.status(400).json({
-        error: "message is required"
-      });
+      return res.status(400).json({ error: "message is required" });
     }
 
     if (!client) {
-      return res.status(503).json({
-        error: "AI backend is not configured yet."
-      });
+      return res.status(503).json({ error: "AI backend is not configured yet." });
     }
 
-    // تم تحديث اسم النموذج ليعمل مع Groq بدون أخطاء
+    // نموذج Llama 3 المعتمد والمتاح مجاناً على Groq
     const response = await client.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "llama3-8b-8192",
       messages: [
         {
           role: "system",
-          content: "أنت ALPHA، مساعد عربي ودود ومفيد. أجب بوضوح وباختصار مناسب، ولا تدّعي تنفيذ شيء لم تنفذه."
+          content: "أنت ALPHA، مساعد عربي ودود ومفيد. أجب بوضوح وباختصار مناسب."
         },
-        {
-          role: "user",
-          content: prompt
-        }
+        { role: "user", content: prompt }
       ]
     });
 
     const replyText = response.choices[0]?.message?.content;
+    res.json({ reply: replyText || "لم يصل رد من نموذج الذكاء الاصطناعي." });
 
-    res.json({
-      reply: replyText || "لم يصل رد من نموذج الذكاء الاصطناعي."
-    });
   } catch (error) {
-    console.error("Groq Error:", error);
-    res.status(500).json({
-      error: "حدث خطأ في الخادم."
-    });
+    console.error("Groq Error Detail:", error);
+    res.status(500).json({ error: "حدث خطأ في الخادم." });
   }
 });
 
