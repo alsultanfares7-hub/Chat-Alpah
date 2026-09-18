@@ -8,8 +8,12 @@ const port = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
-const client = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+// إعداد الاتصال بـ Groq باستخدام مكتبة OpenAI
+const client = process.env.GROQ_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.GROQ_API_KEY,
+      baseURL: "https://api.groq.com/openai/v1"
+    })
   : null;
 
 app.get("/", (req, res) => {
@@ -44,9 +48,9 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    // استدعاء OpenAI بالصيغة الرسمية الصحيحة
+    // استدعاء نموذج Groq السريع والمجاني
     const response = await client.chat.completions.create({
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      model: "llama-3.1-8b-instant",
       messages: [
         {
           role: "system",
@@ -65,7 +69,7 @@ app.post("/api/chat", async (req, res) => {
       reply: replyText || "لم يصل رد من نموذج الذكاء الاصطناعي."
     });
   } catch (error) {
-    console.error("OpenAI Error:", error);
+    console.error("Groq Error:", error);
     res.status(500).json({
       error: "حدث خطأ في الخادم."
     });
