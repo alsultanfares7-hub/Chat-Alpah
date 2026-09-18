@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Alpha" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/alpha_bg</item>
+        <item name="android:navigationBarColor">@color/alpha_bg</item>
+        <item name="colorPrimary">@color/alpha_red</item>
+        <item name="colorSecondary">@color/alpha_red</item>
+    </style>
+</resources>
