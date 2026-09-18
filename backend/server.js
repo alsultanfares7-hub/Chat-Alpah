@@ -18,16 +18,23 @@ const client = groqApiKey
     })
   : null;
 
-// المسار الرئيسي للتحقق من عمل الخادم
+// قائمة النماذج المعتمدة بالترتيب (في حال فشل الأوّل يتم الانتقال للثاني تلقائياً)
+const DEFAULT_MODELS = [
+  "llama-3.1-8b-instant",
+  "llama3-70b-8192",
+  "mixtral-8x7b-32768"
+];
+
+// فحص حالة الخادم
 app.get("/", (req, res) => {
   res.json({
-    service: "ALPHA Backend",
+    service: "ALPHA Backend API",
     status: "online",
     timestamp: new Date().toISOString()
   });
 });
 
-// مسار فحص الحالة (Health Check)
+// فحص الجاهزية والاتصال
 app.get("/health", (req, res) => {
   res.json({
     ok: true,
@@ -39,12 +46,15 @@ app.get("/health", (req, res) => {
 // مسار المحادثة الرئيسي
 app.post("/api/chat", async (req, res) => {
   try {
-    const prompt = typeof req.body?.message === "string" ? req.body.message.trim() : "";
+    // مرونة في قراءة الرسالة بجميع المسميات المحتملة من تطبيق الأندرويد
+    const body = req.body || {};
+    const rawPrompt = body.message || body.prompt || body.text || body.content || "";
+    const prompt = typeof rawPrompt === "string" ? rawPrompt.trim() : "";
 
     if (!prompt) {
       return res.status(400).json({
         error: "message_required",
-        message: "الرجاء إدخال نص الرسالة."
+        message: "الرسالة المرسلة فارغة."
       });
     }
 
@@ -55,56 +65,74 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    // تحديد النموذج الافتراضي المعتمد
-    const activeModel = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
+    // تحديد النماذج المراد تجربتها
+    const candidateModels = process.env.GROQ_MODEL 
+      ? [process.env.GROQ_MODEL, ...DEFAULT_MODELS] 
+      : DEFAULT_MODELS;
 
-    const response = await client.chat.completions.create({
-      model: activeModel,
-      messages: [
-        {
-          role: "system",
-          content: "أنت ALPHA، مساعد ذكي وودود ومفيد يجيب باللغة العربية بأسلوب واضح ومباشر."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1024
-    });
+    let replyText = null;
+    let usedModel = null;
+    let lastError = null;
 
-    const replyText = response.choices[0]?.message?.content?.trim();
+    // محاولة الاتصال بالنماذج المتاحة بالتتابع تلقائياً
+    for (const modelName of candidateModels) {
+      try {
+        const response = await client.chat.completions.create({
+          model: modelName,
+          messages: [
+            {
+              role: "system",
+              content: "أنت ALPHA، مساعد عربي ودود ومفيد. أجب بوضوح وباختصار مناسب."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1024
+        });
+
+        replyText = response.choices[0]?.message?.content?.trim();
+        usedModel = modelName;
+        break; // نجاح الطلب، الخروج من التكرار
+      } catch (err) {
+        console.warn(`Model ${modelName} failed or unavailable. Trying fallback...`, err?.message);
+        lastError = err;
+      }
+    }
+
+    if (!replyText) {
+      throw lastError || new Error("جميع النماذج المتاحة لم تستجب.");
+    }
 
     return res.json({
-      reply: replyText || "لم يتم استلام رد مناسب من النموذج.",
-      modelUsed: activeModel
+      reply: replyText,
+      model: usedModel
     });
 
   } catch (error) {
-    console.error("Groq API Error Detail:", {
+    console.error("Groq Final Error Detail:", {
       status: error?.status,
       message: error?.message,
       code: error?.code
     });
 
-    // معالجة الأخطاء الشائعة واستجابة واضحة
     if (error?.status === 401) {
-      return res.status(401).json({ error: "invalid_api_key", message: "مفتاح API غير صالح." });
-    }
-
-    if (error?.status === 404 || error?.code === "model_not_found" || error?.code === "model_decommissioned") {
-      return res.status(400).json({ error: "invalid_model", message: "النموذج المحدد غير متاح حالياً." });
+      return res.status(401).json({
+        error: "unauthorized",
+        message: "مفتاح API غير صالح أو غير مصرح له."
+      });
     }
 
     return res.status(500).json({
       error: "internal_server_error",
-      message: "حدث خطأ غير متوقع في الخادم."
+      message: "حدث خطأ في الخادم أثناء معالجة الطلب."
     });
   }
 });
 
-// تشغيل السيرفر
+// تشغيل الخادم
 app.listen(port, "0.0.0.0", () => {
-  console.log(`🚀 ALPHA Backend is running on port ${port}`);
+  console.log(`🚀 ALPHA Professional Backend running on port ${port}`);
 });
