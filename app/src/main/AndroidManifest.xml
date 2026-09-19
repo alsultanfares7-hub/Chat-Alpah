@@ -8,7 +8,9 @@
         android:label="ALPHA"
         android:supportsRtl="true"
         android:theme="@style/Theme.Alpha"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="false"
+        android:icon="@drawable/alpha_icon"
+        android:roundIcon="@drawable/alpha_icon">
 
         <activity
             android:name=".MainActivity"
