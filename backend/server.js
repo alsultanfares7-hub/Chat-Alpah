@@ -5,23 +5,31 @@ import Groq from "groq-sdk";
 const app = express();
 const PORT = Number(process.env.PORT) || 8080;
 
-const TEXT_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
-const VISION_MODEL = process.env.GROQ_VISION_MODEL || "qwen/qwen3.6-27b";
+const TEXT_MODEL =
+  process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+
+const VISION_MODEL =
+  process.env.GROQ_VISION_MODEL || "qwen/qwen3.6-27b";
+
 const MAX_MESSAGES = 40;
 const MAX_MESSAGE_CHARS = 30000;
 
 app.disable("x-powered-by");
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
-}));
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"]
+  })
+);
 
 app.use(express.json({ limit: "25mb" }));
 
 const groq = process.env.GROQ_API_KEY
-  ? new Groq({ apiKey: process.env.GROQ_API_KEY })
+  ? new Groq({
+      apiKey: process.env.GROQ_API_KEY
+    })
   : null;
 
 const SYSTEM_PROMPT = `
@@ -279,27 +287,41 @@ CYBERSECURITY:
 `;
 
 function cleanMessages(input) {
-  if (!Array.isArray(input)) return [];
+  if (!Array.isArray(input)) {
+    return [];
+  }
 
   return input
     .slice(-MAX_MESSAGES)
     .map((m) => {
-      const role = m?.role === "assistant" ? "assistant" : "user";
+      const role =
+        m?.role === "assistant"
+          ? "assistant"
+          : "user";
 
       let content = m?.content;
 
       if (typeof content === "string") {
-        content = content.slice(0, MAX_MESSAGE_CHARS);
+        content = content.slice(
+          0,
+          MAX_MESSAGE_CHARS
+        );
       }
 
-      return { role, content };
+      return {
+        role,
+        content
+      };
     })
     .filter((m) => {
       if (typeof m.content === "string") {
         return m.content.trim().length > 0;
       }
 
-      return m.content && typeof m.content === "object";
+      return (
+        m.content &&
+        typeof m.content === "object"
+      );
     });
 }
 
@@ -338,7 +360,9 @@ app.post("/api/chat", async (req, res) => {
       );
     }
 
-    const history = cleanMessages(req.body?.messages);
+    const history = cleanMessages(
+      req.body?.messages
+    );
 
     // Backward compatibility with older app versions.
     if (
@@ -347,18 +371,28 @@ app.post("/api/chat", async (req, res) => {
     ) {
       history.push({
         role: "user",
-        content: req.body.message.slice(0, MAX_MESSAGE_CHARS)
+        content: req.body.message.slice(
+          0,
+          MAX_MESSAGE_CHARS
+        )
       });
     }
 
     if (history.length === 0) {
-      return errorJson(res, 400, "لم تصل رسالة.");
+      return errorJson(
+        res,
+        400,
+        "لم تصل رسالة."
+      );
     }
 
     const hasImage = history.some(
       (m) =>
-        typeof m.content === "object" &&
-        m.content?.type === "image_url"
+        Array.isArray(m.content) &&
+        m.content.some(
+          (part) =>
+            part?.type === "image_url"
+        )
     );
 
     const model = hasImage
@@ -398,7 +432,6 @@ app.post("/api/chat", async (req, res) => {
       reply,
       model
     });
-
   } catch (error) {
     console.error("ALPHA API error:", {
       status: error?.status,
@@ -447,14 +480,14 @@ app.use((req, res) => {
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(
-    `ALPHA Backend listening on port ${PORT}`
+    \`ALPHA Backend listening on port \${PORT}\`
   );
 
   console.log(
-    `Text model: ${TEXT_MODEL}`
+    \`Text model: \${TEXT_MODEL}\`
   );
 
   console.log(
-    `Vision model: ${VISION_MODEL}`
+    \`Vision model: \${VISION_MODEL}\`
   );
 });
