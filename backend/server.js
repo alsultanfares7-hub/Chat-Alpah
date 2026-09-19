@@ -60,9 +60,9 @@ const SYSTEM_PROMPT = `
 
 هذا سكربت بسيط لروبلوكس:
 
-\\`\\`\\`lua
+\`\`\`lua
 print("Hello ALPHA")
-\\`\\`\\`
+\`\`\`
 
 - لا تضع الكود بين كلام عادي بدون code fence.
 - لا تستخدم code fence واحدًا يحتوي على الشرح والكود معًا.
@@ -73,15 +73,15 @@ print("Hello ALPHA")
 
 ملف: Main.server.lua
 
-\\`\\`\\`lua
+\`\`\`lua
 -- الكود هنا
-\\`\\`\\`
+\`\`\`
 
 ملف: Config.lua
 
-\\`\\`\\`lua
+\`\`\`lua
 -- الكود هنا
-\\`\\`\\`
+\`\`\`
 
 - عندما يطلب المستخدم "انسخ لي الكود" أو "أعطني الكود فقط"، أرسل الكود فقط داخل صندوق الكود المناسب.
 
@@ -480,14 +480,14 @@ app.use((req, res) => {
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(
-    \`ALPHA Backend listening on port \${PORT}\`
+    `ALPHA Backend listening on port ${PORT}`
   );
 
   console.log(
-    \`Text model: \${TEXT_MODEL}\`
+    `Text model: ${TEXT_MODEL}`
   );
 
   console.log(
-    \`Vision model: \${VISION_MODEL}\`
+    `Vision model: ${VISION_MODEL}`
   );
 });
