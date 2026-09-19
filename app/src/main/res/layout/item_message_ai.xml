@@ -1,29 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="start"
     android:orientation="vertical"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
-    <TextView
-        android:id="@+id/messageText"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/aiMessageContainer"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxWidth="330dp"
-        android:background="@drawable/bg_message_ai"
-        android:textColor="@color/alpha_text"
-        android:textSize="15sp"
-        android:textIsSelectable="true" />
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:background="@drawable/bg_message_ai">
 
-    <Button
-        android:id="@+id/copyButton"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:layout_marginTop="4dp"
-        android:text="نسخ 📋"
-        android:textSize="12sp"
-        android:visibility="gone" />
+        <TextView
+            android:id="@+id/messageText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp"
+            android:textIsSelectable="true"
+            android:fontFamily="sans" />
+
+        <Button
+            android:id="@+id/copyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="10dp"
+            android:text="نسخ الكود"
+            android:textAllCaps="false"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
 </LinearLayout>
