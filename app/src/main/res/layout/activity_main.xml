@@ -1,10 +1,13 @@
+
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/alpha_bg">
+    android:background="@color/alpha_bg"
+    android:fitsSystemWindows="true">
 
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="64dp"
@@ -40,6 +43,7 @@
         android:layout_height="1dp"
         android:background="@color/alpha_line" />
 
+    <!-- Welcome -->
     <TextView
         android:id="@+id/welcome"
         android:layout_width="match_parent"
@@ -63,6 +67,7 @@
         android:textColor="@color/alpha_muted"
         android:textSize="14sp" />
 
+    <!-- Messages -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messages"
         android:layout_width="match_parent"
@@ -74,6 +79,7 @@
         android:paddingEnd="16dp"
         android:paddingBottom="10dp" />
 
+    <!-- Bottom Input Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -82,8 +88,10 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:paddingTop="8dp"
-        android:paddingBottom="14dp">
+        android:paddingBottom="12dp"
+        android:background="@color/alpha_bg">
 
+        <!-- Add Button -->
         <ImageButton
             android:id="@+id/addButton"
             android:layout_width="42dp"
@@ -93,6 +101,7 @@
             android:contentDescription="إضافة"
             android:tint="@color/alpha_muted" />
 
+        <!-- Text Input -->
         <EditText
             android:id="@+id/input"
             android:layout_width="0dp"
@@ -110,6 +119,7 @@
             android:singleLine="true"
             android:imeOptions="actionSend" />
 
+        <!-- Send Button -->
         <ImageButton
             android:id="@+id/sendButton"
             android:layout_width="50dp"
