@@ -26,17 +26,35 @@
             android:textIsSelectable="true"
             android:fontFamily="sans" />
 
-        <Button
-            android:id="@+id/copyButton"
+        <LinearLayout
+            android:id="@+id/codeActions"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="نسخ الكود  📋"
-            android:textAllCaps="false"
-            android:minWidth="0dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:visibility="gone" />
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/copyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="نسخ الكود  📋"
+                android:textAllCaps="false"
+                android:minWidth="0dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp" />
+
+            <Button
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="6dp"
+                android:text="حفظ ملف  📄"
+                android:textAllCaps="false"
+                android:minWidth="0dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp" />
+        </LinearLayout>
 
     </LinearLayout>
 
