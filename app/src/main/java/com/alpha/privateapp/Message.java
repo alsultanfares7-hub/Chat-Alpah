@@ -5,7 +5,7 @@ public class Message {
     public final boolean user;
 
     public Message(String text, boolean user) {
-        this.text = text;
+        this.text = text == null ? "" : text;
         this.user = user;
     }
 }
