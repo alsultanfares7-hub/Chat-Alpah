@@ -8,9 +8,9 @@ const PORT = Number(process.env.PORT) || 8080;
 const TEXT_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 const VISION_MODEL = process.env.GROQ_VISION_MODEL || "qwen/qwen3.6-27b";
 
-const MAX_MESSAGES = 40;
-const MAX_MESSAGE_CHARS = 30000;
-const MAX_REQUEST_BYTES = "25mb";
+const MAX_MESSAGES = 80;
+const MAX_MESSAGE_CHARS = 100000;
+const MAX_REQUEST_BYTES = "50mb";
 const TEXT_MAX_TOKENS = Number(process.env.GROQ_TEXT_MAX_TOKENS) || 32768;
 const VISION_MAX_TOKENS = Number(process.env.GROQ_VISION_MAX_TOKENS) || 16384;
 
@@ -52,6 +52,9 @@ const SYSTEM_PROMPT = `
 - لا تضع أي كلام أو عناوين مثل "ملف:" داخل صندوق الكود.
 - إذا طلب المستخدم "الكود فقط" فأرسل الكود فقط، مع code fence مناسب لكل ملف.
 - إذا طلب "كود كامل" أو "الملف كامل" فلا تستخدم (...) أو "أكمل الباقي" أو أجزاء مخفية.
+- إذا طلب المستخدم سكربتًا طويلًا جدًا أو أكثر من 10,000 سطر، لا تختصره لمجرد الطول. اكتب الحل كاملًا بقدر ما يسمح به حد الإخراج.
+- إذا وصل الإخراج إلى حد النموذج قبل إكمال الملف، صرّح بأنه انقطع عند الحد واطلب/اتبع الاستكمال من نفس النقطة بدل إعادة البداية.
+- إذا طلب المستخدم ملفًا كبيرًا، حافظ على أسماء الملفات والبنية والترتيب حتى يمكن تجميع الأجزاء بدون فقدان.
 - لا تحذف وظائف صحيحة من كود المستخدم عند التعديل إلا إذا كان هناك سبب واضح.
 - لا تضف حشوًا أو آلاف الأسطر لمجرد زيادة الحجم. اجعل الكود كاملًا بقدر ما يحتاجه المشروع.
 - إذا كان المشروع كبيرًا، قسّمه إلى ملفات منظمة بدل ملف واحد ضخم.
