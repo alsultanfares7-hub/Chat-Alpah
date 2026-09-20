@@ -5,13 +5,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
+import android.content.Intent;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -41,8 +41,10 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences preferences;
 
     private String pendingImageBase64;
+    private String pendingImagePath;
     private ActivityResultLauncher<String> imagePicker;
     private boolean waitingForResponse;
+    private String pendingSaveCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
         preferences = getSharedPreferences(PREFS, MODE_PRIVATE);
         messages = loadMessages();
-        adapter = new MessageAdapter(messages);
+        adapter = new MessageAdapter(messages, this::saveCodeAsFile);
         aiClient = new AiClient();
 
         list.setLayoutManager(new LinearLayoutManager(this));
@@ -75,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
                     try {
                         pendingImageBase64 = imageToBase64(uri);
+                        pendingImagePath = copyImageToInternalFile(uri);
                         Toast.makeText(
                                 this,
                                 "تم إرفاق الصورة. اكتب سؤالك عنها ثم أرسل.",
@@ -125,7 +128,19 @@ public class MainActivity extends AppCompatActivity {
         hideKeyboard();
 
         String image = pendingImageBase64;
+        String imagePath = pendingImagePath;
         pendingImageBase64 = null;
+        pendingImagePath = null;
+
+        // Keep the image attached to the user message so later turns can
+        // resend it as part of the conversation context.
+        int lastUserIndex = messages.size() - 1;
+        if (lastUserIndex >= 0 && imagePath != null) {
+            Message old = messages.get(lastUserIndex);
+            messages.set(lastUserIndex, new Message(old.text, true, imagePath));
+            adapter.notifyItemChanged(lastUserIndex);
+            saveMessages();
+        }
 
         ArrayList<Message> requestHistory = createRequestHistory();
         setWaiting(true);
@@ -270,6 +285,54 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    private String copyImageToInternalFile(Uri uri) throws Exception {
+        String fileName = "image_" + System.currentTimeMillis() + ".jpg";
+        java.io.File file = new java.io.File(getFilesDir(), fileName);
+
+        try (InputStream input = getContentResolver().openInputStream(uri);
+             java.io.FileOutputStream output = new java.io.FileOutputStream(file)) {
+            if (input == null) throw new Exception("Unable to open image");
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                output.write(buffer, 0, read);
+            }
+        }
+        return file.getAbsolutePath();
+    }
+
+    private void saveCodeAsFile(String code) {
+        if (code == null || code.isEmpty()) return;
+
+        pendingSaveCode = code;
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_TITLE, "alpha_code.txt");
+        startActivityForResult(intent, 7001);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != 7001 || resultCode != RESULT_OK || data == null
+                || data.getData() == null || pendingSaveCode == null) {
+            return;
+        }
+
+        try (java.io.OutputStream output =
+                     getContentResolver().openOutputStream(data.getData())) {
+            if (output == null) throw new Exception("Unable to open destination");
+            output.write(pendingSaveCode.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            output.flush();
+            Toast.makeText(this, "تم حفظ الملف بنجاح 📄", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "تعذر حفظ الملف.", Toast.LENGTH_SHORT).show();
+        } finally {
+            pendingSaveCode = null;
+        }
+    }
+
     private void saveMessages() {
         try {
             JSONArray array = new JSONArray();
@@ -280,6 +343,7 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject item = new JSONObject();
                 item.put("text", message.text);
                 item.put("user", message.user);
+                if (message.imagePath != null) item.put("imagePath", message.imagePath);
                 array.put(item);
             }
 
@@ -301,7 +365,8 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject item = array.getJSONObject(i);
                 result.add(new Message(
                         item.optString("text", ""),
-                        item.optBoolean("user", false)
+                        item.optBoolean("user", false),
+                        item.optString("imagePath", null)
                 ));
             }
         } catch (Exception ignored) {

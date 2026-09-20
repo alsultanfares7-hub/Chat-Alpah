@@ -152,10 +152,50 @@ public class AiClient {
         JSONObject payload = new JSONObject();
         JSONArray messages = new JSONArray();
 
-        for (Message message : history) {
+        int imageCount = 0;
+        for (int i = history.size() - 1; i >= 0; i--) {
+            if (history.get(i).imagePath != null && !history.get(i).imagePath.isEmpty()) {
+                imageCount++;
+                if (imageCount >= 4) break;
+            }
+        }
+
+        imageCount = 0;
+        for (int i = 0; i < history.size(); i++) {
+            Message message = history.get(i);
             JSONObject item = new JSONObject();
             item.put("role", message.user ? "user" : "assistant");
-            item.put("content", message.text);
+
+            if (message.imagePath != null && !message.imagePath.isEmpty()) {
+                imageCount++;
+                if (imageCount <= 4) {
+                    JSONArray content = new JSONArray();
+
+                    JSONObject textPart = new JSONObject();
+                    textPart.put("type", "text");
+                    textPart.put("text", message.text);
+                    content.put(textPart);
+
+                    try {
+                        String data = imageFileToBase64(message.imagePath);
+                        JSONObject imagePart = new JSONObject();
+                        imagePart.put("type", "image_url");
+                        JSONObject imageUrl = new JSONObject();
+                        imageUrl.put("url", "data:image/jpeg;base64," + data);
+                        imagePart.put("image_url", imageUrl);
+                        content.put(imagePart);
+                    } catch (Exception ignored) {
+                        // If the old image was deleted, keep its text.
+                    }
+
+                    item.put("content", content);
+                } else {
+                    item.put("content", message.text);
+                }
+            } else {
+                item.put("content", message.text);
+            }
+
             messages.put(item);
         }
 
@@ -184,6 +224,24 @@ public class AiClient {
 
         payload.put("messages", messages);
         return payload;
+    }
+
+    private String imageFileToBase64(String path) throws Exception {
+        java.io.FileInputStream input = new java.io.FileInputStream(path);
+        try {
+            java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = input.read(buffer)) != -1) {
+                output.write(buffer, 0, read);
+            }
+            return android.util.Base64.encodeToString(
+                    output.toByteArray(),
+                    android.util.Base64.NO_WRAP
+            );
+        } finally {
+            input.close();
+        }
     }
 
     private void writeBody(HttpURLConnection conn, JSONObject payload) throws Exception {

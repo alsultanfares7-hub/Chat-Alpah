@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +31,12 @@ import java.util.regex.Pattern;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.Holder> {
 
+    public interface OnSaveCodeListener {
+        void onSaveCode(String code);
+    }
+
     private final List<Message> items;
+    private final OnSaveCodeListener saveCodeListener;
 
     private static final Pattern CODE_BLOCK = Pattern.compile(
             "```[ \\t]*([a-zA-Z0-9_+#.-]+)?[ \\t]*\\r?\\n([\\s\\S]*?)```",
@@ -41,7 +47,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.Holder> 
     private static final Pattern INLINE_CODE = Pattern.compile("`([^`\\n]+)`");
 
     public MessageAdapter(List<Message> items) {
+        this(items, null);
+    }
+
+    public MessageAdapter(List<Message> items, OnSaveCodeListener saveCodeListener) {
         this.items = items;
+        this.saveCodeListener = saveCodeListener;
     }
 
     @Override
@@ -81,9 +92,26 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.Holder> 
         );
 
         if (hasCode && !response.trim().isEmpty()) {
-            holder.copyButton.setVisibility(View.VISIBLE);
-            holder.copyButton.setText("نسخ الكود  📋");
-            holder.copyButton.setOnClickListener(v -> copyAllCode(v.getContext(), response));
+            if (holder.codeActions != null) {
+                holder.codeActions.setVisibility(View.VISIBLE);
+            }
+            if (holder.copyButton != null) {
+                holder.copyButton.setVisibility(View.VISIBLE);
+                holder.copyButton.setText("نسخ الكود  📋");
+                holder.copyButton.setOnClickListener(v -> copyAllCode(v.getContext(), response));
+            }
+            if (holder.saveButton != null) {
+                holder.saveButton.setVisibility(
+                        saveCodeListener == null ? View.GONE : View.VISIBLE
+                );
+                holder.saveButton.setOnClickListener(
+                        v -> {
+                            if (saveCodeListener != null) {
+                                saveCodeListener.onSaveCode(extractAllCode(response));
+                            }
+                        }
+                );
+            }
         } else {
             hideCopyButton(holder);
         }
@@ -251,7 +279,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.Holder> 
         return false;
     }
 
-    private void copyAllCode(Context context, String response) {
+    private String extractAllCode(String response) {
         Matcher matcher = CODE_BLOCK.matcher(response);
         StringBuilder code = new StringBuilder();
 
@@ -268,7 +296,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.Holder> 
             code.append(clean);
         }
 
-        if (code.length() == 0) return;
+        return code.toString();
+    }
+
+    private void copyAllCode(Context context, String response) {
+        String code = extractAllCode(response);
+        if (code.isEmpty()) return;
 
         ClipboardManager clipboard =
                 (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -286,8 +319,17 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.Holder> 
     }
 
     private void hideCopyButton(Holder holder) {
-        holder.copyButton.setVisibility(View.GONE);
-        holder.copyButton.setOnClickListener(null);
+        if (holder.codeActions != null) {
+            holder.codeActions.setVisibility(View.GONE);
+        }
+        if (holder.copyButton != null) {
+            holder.copyButton.setVisibility(View.GONE);
+            holder.copyButton.setOnClickListener(null);
+        }
+        if (holder.saveButton != null) {
+            holder.saveButton.setVisibility(View.GONE);
+            holder.saveButton.setOnClickListener(null);
+        }
     }
 
     @Override
@@ -297,12 +339,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.Holder> 
 
     static class Holder extends RecyclerView.ViewHolder {
         final TextView text;
+        final LinearLayout codeActions;
         final Button copyButton;
+        final Button saveButton;
 
         Holder(@NonNull View itemView) {
             super(itemView);
             text = itemView.findViewById(R.id.messageText);
+            codeActions = itemView.findViewById(R.id.codeActions);
             copyButton = itemView.findViewById(R.id.copyButton);
+            saveButton = itemView.findViewById(R.id.saveButton);
         }
     }
 }
